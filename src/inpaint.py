@@ -110,6 +110,8 @@ def main():
         exit(1)
 
     inpaint_out, g_out = m.inpaint(in_img, mask, args.blend, args.proposedloss)
+    if not os.path.exists(args.outDir):
+        os.mkdir(args.outDir)
     imageio.imsave(os.path.join(args.outDir, 'mask.png'), mask)
     saveimages(g_out, 'gen')
     saveimages(inpaint_out, 'inpaint')
