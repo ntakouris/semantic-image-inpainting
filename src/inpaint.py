@@ -2,13 +2,15 @@ import tensorflow as tf
 import scipy.misc
 import argparse
 import os
+import imageio
 import numpy as np
 from glob import glob
 
 from model import ModelInpaint
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model_file', type=str, help="Pretrained GAN model")
+parser.add_argument('--model_file', type=str, default='../graphs/dcgan-100.pb', help="Pretrained GAN model")
+parser.add_argument('--proposedloss', type=bool, default=False)
 parser.add_argument('--lr', type=float, default=0.01)
 parser.add_argument('--momentum', type=float, default=0.9)
 parser.add_argument('--nIter', type=int, default=1000)
@@ -30,7 +32,7 @@ parser.add_argument('--maskThresh', type=int,
                     help='Threshold in case input mask is not binary')
 parser.add_argument('--in_image', type=str, default=None,
                     help='Input Image (ignored if inDir is specified')
-parser.add_argument('--inDir', type=str, default=None,
+parser.add_argument('--inDir', type=str, default='../testimages',
                     help='Path to input images')
 parser.add_argument('--imgExt', type=str, default='png',
                     help='input images file extension')
@@ -39,7 +41,7 @@ args = parser.parse_args()
 
 
 def loadimage(filename):
-    img = scipy.misc.imread(filename, mode='RGB').astype(np.float)
+    img = imageio.imread(filename, pilmode='RGB').astype(np.float)
     return img
 
 
@@ -52,7 +54,7 @@ def saveimages(outimages, prefix='samples'):
     for i in range(numimages):
         filename = '{}_{}.png'.format(prefix, i)
         filename = os.path.join(args.outDir, filename)
-        scipy.misc.imsave(filename, outimages[i, :, :, :])
+        imageio.imsave(filename, outimages[i, :, :, :])
 
 
 def gen_mask(maskType):
@@ -94,7 +96,7 @@ def main():
 
     # Generate some samples from the model as a test
     imout = m.sample()
-    saveimages(imout)
+    #saveimages(imout)
 
     mask = gen_mask(args.maskType)
     if args.inDir is not None:
@@ -107,8 +109,8 @@ def main():
         print('Input image needs to be specified')
         exit(1)
 
-    inpaint_out, g_out = m.inpaint(in_img, mask, args.blend)
-    scipy.misc.imsave(os.path.join(args.outDir, 'mask.png'), mask)
+    inpaint_out, g_out = m.inpaint(in_img, mask, args.blend, args.proposedloss)
+    imageio.imsave(os.path.join(args.outDir, 'mask.png'), mask)
     saveimages(g_out, 'gen')
     saveimages(inpaint_out, 'inpaint')
 

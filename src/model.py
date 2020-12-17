@@ -41,7 +41,8 @@ class ModelInpaint():
 
         self.image_shape = self.go.shape[1:].as_list()
 
-        self.l = config.lambda_p
+        if hasattr(config, 'lambda_p'):
+            self.l = config.lambda_p
 
         self.sess = tf.Session(graph=self.graph)
 
@@ -50,6 +51,9 @@ class ModelInpaint():
     def init_z(self):
         """Initializes latent variable z"""
         self.z = np.random.randn(self.batch_size, self.z_dim)
+
+    def discriminate(self, inp):
+        return self.sess.run(self.do, feed_dict={self.di: inp})
 
     def sample(self, z=None):
         """GAN sampler. Useful for checking if the GAN was loaded correctly"""
@@ -120,7 +124,7 @@ class ModelInpaint():
 
         return images_out
 
-    def build_inpaint_graph(self):
+    def build_inpaint_graph(self, log_generator_loss=False):
         """Builds the context and prior loss objective"""
         with self.graph.as_default():
             self.masks = tf.placeholder(tf.float32,
@@ -129,17 +133,24 @@ class ModelInpaint():
             self.images = tf.placeholder(tf.float32,
                                          [None] + self.image_shape,
                                          name='images')
+            
             self.context_loss = tf.reduce_sum(
                     tf.contrib.layers.flatten(
                         tf.abs(tf.multiply(self.masks, self.go) -
                                tf.multiply(self.masks, self.images))), 1
                 )
 
-            self.perceptual_loss = self.gl
+            if not log_generator_loss:
+                self.perceptual_loss = self.gl
+            
+            if log_generator_loss:
+                self.perceptual_loss = tf.math.log(self.gl)
+
             self.inpaint_loss = self.context_loss + self.l*self.perceptual_loss
+
             self.inpaint_grad = tf.gradients(self.inpaint_loss, self.gi)
 
-    def inpaint(self, image, mask, blend=True):
+    def inpaint(self, image, mask, blend=True, proposed_loss=False):
         """Perform inpainting with the given image and mask with the standard
         pipeline as described in paper. To skip steps or try other pre/post
         processing, the methods can be called seperately.
@@ -153,7 +164,8 @@ class ModelInpaint():
         Returns:
             post processed image (merged/blneded), raw generator output
         """
-        self.build_inpaint_graph()
+        log_generator_loss = not proposed_loss
+        self.build_inpaint_graph(log_generator_loss=log_generator_loss)
         self.preprocess(image, mask)
 
         imout = self.backprop_to_input()
@@ -171,6 +183,7 @@ class ModelInpaint():
         v = 0
         for i in range(self.config.nIter):
             out_vars = [self.inpaint_loss, self.inpaint_grad, self.go]
+
             in_dict = {self.masks: self.masks_data,
                        self.gi: self.z,
                        self.images: self.images_data}
