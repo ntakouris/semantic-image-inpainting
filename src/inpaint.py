@@ -54,6 +54,7 @@ def saveimages(outimages, infiles, prefix='samples'):
     for i in range(numimages):
         filename = '{}_{}.png'.format(prefix, infiles[i])
         filename = os.path.join(args.outDir, filename)
+        print(filename)
         imageio.imsave(filename, outimages[i, :, :, :])
 
 
@@ -113,9 +114,10 @@ def main():
     if not os.path.exists(args.outDir):
         os.mkdir(args.outDir)
     imageio.imsave(os.path.join(args.outDir, 'mask.png'), mask)
-    
-    saveimages(g_out, imgfilenames, 'generated')
-    saveimages(inpaint_out, imgfilenames, 'blended')
+
+    fnames = [x[14:-4] for x in imgfilenames]
+    saveimages(g_out, fnames, 'generated')
+    saveimages(inpaint_out, fnames, 'blended')
 
 
 if __name__ == '__main__':
