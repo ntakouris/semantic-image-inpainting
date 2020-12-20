@@ -129,7 +129,7 @@ def main():
             continue
         d[f] = losses[:, idx]
     
-    savemat('losses.mat', d)
+    savemat(f'{args.outDir}_losses.mat', d)
 
     saveimages(g_out, fnames, 'generated')
     saveimages(inpaint_out, fnames, 'blended')

@@ -6,3 +6,5 @@ completions
 
 env
 .ipynb_checkpoints
+losses.mat
+completions_losses.mat
