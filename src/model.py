@@ -3,11 +3,10 @@ import numpy as np
 import external.poissonblending as blending
 from scipy.signal import convolve2d
 
-
 class ModelInpaint():
     def __init__(self, modelfilename, config,
                  model_name='dcgan',
-                 gen_input='z:0', gen_output='Tanh:0', gen_loss='Mean_2:0',
+                 gen_input='z:0', gen_output='Tanh:0', gen_loss='logistic_loss_2:0', # gen_loss='Mean_2:0',
                  disc_input='real_images:0', disc_output='Sigmoid:0',
                  z_dim=100, batch_size=64):
         """
@@ -146,7 +145,7 @@ class ModelInpaint():
             if log_generator_loss:
                 self.perceptual_loss = tf.math.log(self.gl)
 
-            self.inpaint_loss = self.context_loss + self.l*self.perceptual_loss
+            self.inpaint_loss = self.context_loss + self.l * self.perceptual_loss
 
             self.inpaint_grad = tf.gradients(self.inpaint_loss, self.gi)
 
@@ -169,7 +168,7 @@ class ModelInpaint():
         self.preprocess(image, mask)
 
         imout, losses, generator_losses = self.backprop_to_input()
-
+        
         return self.postprocess(imout, blend), imout, losses, generator_losses
 
     def backprop_to_input(self, verbose=True):
@@ -183,9 +182,6 @@ class ModelInpaint():
         losses = np.zeros([self.config.nIter, self.images_data.shape[0]])
         generator_losses = np.zeros([self.config.nIter, self.images_data.shape[0]])
 
-        print(f'loss shape: {losses.shape}')
-        print(f'generator loss shape: {generator_losses.shape}')
-
         v = 0
         for i in range(self.config.nIter):
             out_vars = [self.inpaint_loss, self.inpaint_grad, self.go, self.gl]
@@ -195,8 +191,11 @@ class ModelInpaint():
                        self.images: self.images_data}
 
             loss, grad, imout, gl = self.sess.run(out_vars, feed_dict=in_dict)
-            losses[i, :] = loss
-            generator_losses[i, :] = gl
+            # print('gl shape: ', gl.shape)
+            # print('loss shape: ', loss.shape)
+            # print(gl)
+            # losses[i, :] = loss
+            generator_losses[i, :] = gl.squeeze()
 
             v_prev = np.copy(v)
             v = self.config.momentum*v - self.config.lr*grad[0]

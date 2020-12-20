@@ -116,10 +116,7 @@ def main():
     if not os.path.exists(args.outDir):
         os.mkdir(args.outDir)
     imageio.imsave(os.path.join(args.outDir, 'mask.png'), mask)
-
     fnames = [x[14:-4] for x in imgfilenames]
-    print(losses.shape)
-    print(generator_losses.shape)
 
     d = {
         'losses': losses
@@ -135,12 +132,12 @@ def main():
     d = {
         'losses': generator_losses
     }
-    
+    print(generator_losses)
     for idx, f in enumerate(fnames):
         if idx == 64:
             continue
         d[f] = generator_losses[:, idx]
-
+    print(d)
     savemat(f'{args.outDir}_generator_losses.mat', d)
 
     saveimages(g_out, fnames, 'generated')
