@@ -168,9 +168,9 @@ class ModelInpaint():
         self.build_inpaint_graph(log_generator_loss=log_generator_loss)
         self.preprocess(image, mask)
 
-        imout = self.backprop_to_input()
+        imout, losses = self.backprop_to_input()
 
-        return self.postprocess(imout, blend), imout
+        return self.postprocess(imout, blend), imout, losses
 
     def backprop_to_input(self, verbose=True):
         """Main worker function. To be called after all initilization is done.
@@ -180,6 +180,9 @@ class ModelInpaint():
         Returns:
             generator output image
         """
+        losses = np.zeros([self.config.nIter, self.images_data.shape[0]])
+        print(f'loss dict shape: {losses.shape}')
+
         v = 0
         for i in range(self.config.nIter):
             out_vars = [self.inpaint_loss, self.inpaint_grad, self.go]
@@ -189,6 +192,7 @@ class ModelInpaint():
                        self.images: self.images_data}
 
             loss, grad, imout = self.sess.run(out_vars, feed_dict=in_dict)
+            losses[i, :] = loss
 
             v_prev = np.copy(v)
             v = self.config.momentum*v - self.config.lr*grad[0]
@@ -196,10 +200,10 @@ class ModelInpaint():
                        (1 + self.config.momentum) * v)
             self.z = np.clip(self.z, -1, 1)
 
-            if verbose:
-                print('Iteration {}: {}'.format(i, np.mean(loss)))
+            # if verbose:
+            #     print('Iteration {}: {}'.format(i, np.mean(loss)))
 
-        return imout
+        return imout, losses
 
     @staticmethod
     def loadpb(filename, model_name='dcgan'):
