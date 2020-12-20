@@ -112,13 +112,14 @@ def main():
         print('Input image needs to be specified')
         exit(1)
 
-    inpaint_out, g_out, losses = m.inpaint(in_img, mask, args.blend, args.proposedloss)
+    inpaint_out, g_out, losses, generator_losses = m.inpaint(in_img, mask, args.blend, args.proposedloss)
     if not os.path.exists(args.outDir):
         os.mkdir(args.outDir)
     imageio.imsave(os.path.join(args.outDir, 'mask.png'), mask)
 
     fnames = [x[14:-4] for x in imgfilenames]
     print(losses.shape)
+    print(generator_losses.shape)
 
     d = {
         'losses': losses
@@ -128,8 +129,22 @@ def main():
         if idx == 64:
             continue
         d[f] = losses[:, idx]
-    
+
     savemat(f'{args.outDir}_losses.mat', d)
+
+    d = {
+        'losses': generator_losses
+    }
+
+    print(d)
+    exit(1)
+    
+    for idx, f in enumerate(fnames):
+        if idx == 64:
+            continue
+        d[f] = generator_losses[:, idx]
+
+    savemat(f'{args.outDir}_generator_losses.mat', d)
 
     saveimages(g_out, fnames, 'generated')
     saveimages(inpaint_out, fnames, 'blended')
