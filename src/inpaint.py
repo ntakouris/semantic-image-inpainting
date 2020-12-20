@@ -135,9 +135,6 @@ def main():
     d = {
         'losses': generator_losses
     }
-
-    print(d)
-    exit(1)
     
     for idx, f in enumerate(fnames):
         if idx == 64:
