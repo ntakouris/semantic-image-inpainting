@@ -126,18 +126,17 @@ def main():
         if idx == 64:
             continue
         d[f] = losses[:, idx]
-
+    #print('lossses: ', d)
     savemat(f'{args.outDir}_losses.mat', d)
 
     d = {
         'losses': generator_losses
     }
-    print(generator_losses)
     for idx, f in enumerate(fnames):
         if idx == 64:
             continue
         d[f] = generator_losses[:, idx]
-    print(d)
+    #print('generator_losses:', d)
     savemat(f'{args.outDir}_generator_losses.mat', d)
 
     saveimages(g_out, fnames, 'generated')

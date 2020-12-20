@@ -137,17 +137,19 @@ class ModelInpaint():
                     tf.contrib.layers.flatten(
                         tf.abs(tf.multiply(self.masks, self.go) -
                                tf.multiply(self.masks, self.images))), 1
-                )
+                ) # (batch_size, )
 
             if not log_generator_loss:
                 self.perceptual_loss = self.gl
             
             if log_generator_loss:
                 self.perceptual_loss = tf.math.log(self.gl)
+            
+            self.perceptual_loss = tf.squeeze(self.perceptual_loss) # (batch_size, )
 
             self.inpaint_loss = self.context_loss + self.l * self.perceptual_loss
 
-            self.inpaint_grad = tf.gradients(self.inpaint_loss, self.gi)
+            self.inpaint_grad = tf.gradients(tf.reduce_sum(self.inpaint_loss), self.gi)
 
     def inpaint(self, image, mask, blend=True, proposed_loss=False):
         """Perform inpainting with the given image and mask with the standard
@@ -191,11 +193,8 @@ class ModelInpaint():
                        self.images: self.images_data}
 
             loss, grad, imout, gl = self.sess.run(out_vars, feed_dict=in_dict)
-            # print('gl shape: ', gl.shape)
-            # print('loss shape: ', loss.shape)
-            # print(gl)
-            # losses[i, :] = loss
-            generator_losses[i, :] = gl.squeeze()
+            losses[i, :] = loss
+            generator_losses[i, :] = gl.flatten()
 
             v_prev = np.copy(v)
             v = self.config.momentum*v - self.config.lr*grad[0]
