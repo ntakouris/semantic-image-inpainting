@@ -33,11 +33,11 @@ class ModelInpaint():
         self.awesome_gan = awesome_gan
         if self.awesome_gan:
             # model_name = 'awesome_gan'
-            z_dim = 128
+            self.z_dim = 128
             gen_input = 'z-noise:0'
             gen_output = 'generator/Tanh:0'
-            gen_loss = 'loss/g_loss:0'
-            # gen_loss = 'logistic_loss_2:0'
+            # gen_loss = 'loss/g_loss:0' / string for summary
+            gen_loss = 'logistic_loss_2:0'
             disc_input = 'x-images:0'
             disc_output = 'discriminator/Sigmoid:0'
 
@@ -50,7 +50,11 @@ class ModelInpaint():
         self.di = self.graph.get_tensor_by_name(model_name+'/'+disc_input)
         self.do = self.graph.get_tensor_by_name(model_name+'/'+disc_output)
 
+        # for name, value in zip(['gi','go','gl','do','do'], [self.gi, self.go, self.gl, self.di, self.do]):
+        #     print(f'{name} --> {value}')
+
         self.image_shape = self.go.shape[1:].as_list()
+        print(f'self.image_shape = {self.image_shape}')
 
         if hasattr(config, 'lambda_p'):
             self.l = config.lambda_p
