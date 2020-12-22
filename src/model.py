@@ -30,13 +30,16 @@ class ModelInpaint():
         self.batch_size = batch_size
         self.z_dim = z_dim
 
+        self.awesome_gan = awesome_gan
         if self.awesome_gan:
+            # model_name = 'awesome_gan'
             z_dim = 128
-            gen_input = ''
-            gen_output = ''
-            gen_loss = ''
-            disc_input = ''
-            disc_output = ''
+            gen_input = 'z-noise:0'
+            gen_output = 'generator/Tanh:0'
+            gen_loss = 'loss/g_loss:0'
+            # gen_loss = 'logistic_loss_2:0'
+            disc_input = 'x-images:0'
+            disc_output = 'discriminator/Sigmoid:0'
 
         self.graph, self.graph_def = ModelInpaint.loadpb(modelfilename,
                                                          model_name)

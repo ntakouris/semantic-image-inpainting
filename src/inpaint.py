@@ -12,6 +12,7 @@ from model import ModelInpaint
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_file', type=str, default='../graphs/dcgan-100.pb', help="Pretrained GAN model")
 parser.add_argument('--proposedloss', type=bool, default=False)
+parser.add_argument('--awesomegan', type=bool, default=False)
 parser.add_argument('--lr', type=float, default=0.01)
 parser.add_argument('--momentum', type=float, default=0.9)
 parser.add_argument('--nIter', type=int, default=1000)
@@ -94,7 +95,7 @@ def loadmask(filename, thresh=128):
 
 
 def main():
-    m = ModelInpaint(args.model_file, args)
+    m = ModelInpaint(args.model_file, args, awesome_gan=args.awesomegan)
 
     # Generate some samples from the model as a test
     #imout = m.sample()
