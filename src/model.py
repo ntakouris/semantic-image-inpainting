@@ -8,7 +8,7 @@ class ModelInpaint():
                  model_name='dcgan',
                  gen_input='z:0', gen_output='Tanh:0', gen_loss='logistic_loss_2:0', # gen_loss='Mean_2:0',
                  disc_input='real_images:0', disc_output='Sigmoid:0',
-                 z_dim=100, batch_size=64):
+                 z_dim=100, batch_size=64, awesome_gan=False):
         """
         Model for Semantic image inpainting.
         Loads frozen weights of a GAN and create the graph according to the
@@ -29,6 +29,15 @@ class ModelInpaint():
 
         self.batch_size = batch_size
         self.z_dim = z_dim
+
+        if self.awesome_gan:
+            z_dim = 128
+            gen_input = ''
+            gen_output = ''
+            gen_loss = ''
+            disc_input = ''
+            disc_output = ''
+
         self.graph, self.graph_def = ModelInpaint.loadpb(modelfilename,
                                                          model_name)
 

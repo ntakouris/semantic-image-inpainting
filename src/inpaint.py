@@ -55,7 +55,7 @@ def saveimages(outimages, infiles, prefix='samples'):
     for i in range(numimages):
         filename = '{}_{}.png'.format(prefix, infiles[i])
         filename = os.path.join(args.outDir, filename)
-        print(filename)
+        # print(filename)
         imageio.imsave(filename, outimages[i, :, :, :])
 
 
