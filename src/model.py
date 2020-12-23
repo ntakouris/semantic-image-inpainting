@@ -218,8 +218,8 @@ class ModelInpaint():
                        (1 + self.config.momentum) * v)
             self.z = np.clip(self.z, -1, 1)
 
-            # if verbose:
-            #     print('Iteration {}: {}'.format(i, np.mean(loss)))
+            if verbose:
+                print('Iteration {}: {}'.format(i, np.mean(loss)))
 
         return imout, losses, generator_losses
 
