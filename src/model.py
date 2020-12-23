@@ -139,6 +139,12 @@ class ModelInpaint():
 
         return images_out
 
+    @staticmethod
+    def log10(x):
+        numerator = tf.log(x)
+        denominator = tf.log(tf.constant(10, dtype=numerator.dtype))
+        return numerator / denominator
+
     def build_inpaint_graph(self, log_generator_loss=False):
         """Builds the context and prior loss objective"""
         with self.graph.as_default():
@@ -159,7 +165,7 @@ class ModelInpaint():
                 self.perceptual_loss = self.gl
             
             if log_generator_loss:
-                self.perceptual_loss = tf.math.log(self.gl)
+                self.perceptual_loss = ModelInpaint.log10(self.gl)
             
             self.perceptual_loss = tf.squeeze(self.perceptual_loss) # (batch_size, )
 
