@@ -65,7 +65,7 @@ class ModelInpaint():
 
     def init_z(self):
         """Initializes latent variable z"""
-        self.z = np.random.randn(self.batch_size, self.z_dim)
+        self.z = np.random.randn(self.batch_size, self.z_dim) # (64, 100) 
 
     def discriminate(self, inp):
         return self.sess.run(self.do, feed_dict={self.di: inp})
@@ -157,8 +157,10 @@ class ModelInpaint():
             
             self.context_loss = tf.reduce_sum(
                     tf.contrib.layers.flatten(
-                        tf.abs(tf.multiply(self.masks, self.go) -
-                               tf.multiply(self.masks, self.images))), 1
+                        tf.abs( # norm-1
+                            # ( mask * generator output ) - (mask * celeba image)
+                            tf.multiply(self.masks, self.go) - tf.multiply(self.masks, self.images)
+                               )), 1
                 ) # (batch_size, )
 
             if not log_generator_loss:
@@ -191,9 +193,9 @@ class ModelInpaint():
         self.build_inpaint_graph(log_generator_loss=log_generator_loss)
         self.preprocess(image, mask)
 
-        imout, losses, generator_losses = self.backprop_to_input()
+        imout, losses, generator_losses, z_first, z_last, go_first, go_last = self.backprop_to_input()
         
-        return self.postprocess(imout, blend), imout, losses, generator_losses
+        return self.postprocess(imout, blend), imout, losses, generator_losses, z_first, z_last, go_first, go_last
 
     def backprop_to_input(self, verbose=True):
         """Main worker function. To be called after all initilization is done.
@@ -206,28 +208,46 @@ class ModelInpaint():
         losses = np.zeros([self.config.nIter, self.images_data.shape[0]])
         generator_losses = np.zeros([self.config.nIter, self.images_data.shape[0]])
 
+        z_first = None
+        go_first = None
+        z_last = None
+        go_last = None
+
         v = 0
         for i in range(self.config.nIter):
+                        # inpaint loss   ,inpaint gradient, generator out, generator loss
             out_vars = [self.inpaint_loss, self.inpaint_grad, self.go, self.gl]
 
-            in_dict = {self.masks: self.masks_data,
-                       self.gi: self.z,
-                       self.images: self.images_data}
+            in_dict = {
+                       self.masks: self.masks_data, # mask
+                       self.gi: self.z, # noise sampled
+                       self.images: self.images_data # test set (subset from celeba)
+                       }
 
             loss, grad, imout, gl = self.sess.run(out_vars, feed_dict=in_dict)
             losses[i, :] = loss
             generator_losses[i, :] = gl.flatten()
 
+            if i == 0:
+                z_first = np.copy(self.z)
+                go_first = np.copy(imout)
+
             v_prev = np.copy(v)
-            v = self.config.momentum*v - self.config.lr*grad[0]
+            v = self.config.momentum * v - self.config.lr * grad[0]
+
             self.z += (-self.config.momentum * v_prev +
                        (1 + self.config.momentum) * v)
+
             self.z = np.clip(self.z, -1, 1)
 
             if verbose:
                 print('Iteration {}: {}'.format(i, np.mean(loss)))
+        #### end for 
 
-        return imout, losses, generator_losses
+        z_last = np.copy(self.z)
+        go_last = np.copy(imout)
+
+        return imout, losses, generator_losses, z_first, z_last, go_first, go_last
 
     @staticmethod
     def loadpb(filename, model_name='dcgan'):
