@@ -144,18 +144,15 @@ def main():
     for idx, f in enumerate(fnames):
         if idx == 64:
             continue
-        d[f] = z_first[:, idx]
-    #print('generator_losses:', d)
+        d[f] = z_first[idx, :]
     savemat(f'{args.outDir}_z_first.mat', d)
 
     d = {}
     for idx, f in enumerate(fnames):
         if idx == 64:
             continue
-        d[f] = z_last[:, idx]
-    #print('generator_losses:', d)
+        d[f] = z_last[idx, :]
     savemat(f'{args.outDir}_z_last.mat', d)
-
 
     saveimages(g_out, fnames, 'generated')
     saveimages(inpaint_out, fnames, 'blended')
