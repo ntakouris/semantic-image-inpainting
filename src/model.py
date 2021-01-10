@@ -173,7 +173,10 @@ class ModelInpaint():
 
             self.inpaint_loss = self.context_loss + self.l * self.perceptual_loss
 
+            # self.discriminator_grad = tf.gradients(tf.reduce_sum(self.inpaint_loss), self.do)
+            self.generator_grad = tf.hessians(tf.reduce_sum(self.go), self.gi)
             self.inpaint_grad = tf.gradients(tf.reduce_sum(self.inpaint_loss), self.gi)
+
 
     def inpaint(self, image, mask, blend=True, proposed_loss=False):
         """Perform inpainting with the given image and mask with the standard
@@ -216,7 +219,7 @@ class ModelInpaint():
         v = 0
         for i in range(self.config.nIter):
                         # inpaint loss   ,inpaint gradient, generator out, generator loss
-            out_vars = [self.inpaint_loss, self.inpaint_grad, self.go, self.gl]
+            out_vars = [self.inpaint_loss, self.inpaint_grad, self.go, self.gl, self.generator_grad]
 
             in_dict = {
                        self.masks: self.masks_data, # mask
@@ -224,7 +227,10 @@ class ModelInpaint():
                        self.images: self.images_data # test set (subset from celeba)
                        }
 
-            loss, grad, imout, gl = self.sess.run(out_vars, feed_dict=in_dict)
+            loss, grad, imout, gl, generator_grad = self.sess.run(out_vars, feed_dict=in_dict)
+            print(f'generator grad shape: {generator_grad[0].shape}')
+            #print(f'discriminator grad shape: {discriminator_grad.shape}')
+            input()
             losses[i, :] = loss
             generator_losses[i, :] = gl.flatten()
 
