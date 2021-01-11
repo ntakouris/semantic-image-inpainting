@@ -174,7 +174,7 @@ class ModelInpaint():
             self.inpaint_loss = self.context_loss + self.l * self.perceptual_loss
 
             # self.discriminator_grad = tf.gradients(tf.reduce_sum(self.inpaint_loss), self.do)
-            self.generator_grad = tf.hessians(tf.reduce_sum(self.go), self.gi)
+            self.generator_grad = tf.hessians(self.go, self.gi)
             self.inpaint_grad = tf.gradients(tf.reduce_sum(self.inpaint_loss), self.gi)
 
 
@@ -227,6 +227,7 @@ class ModelInpaint():
                        self.images: self.images_data # test set (subset from celeba)
                        }
 
+            print('sess.run')
             loss, grad, imout, gl, generator_grad = self.sess.run(out_vars, feed_dict=in_dict)
             print(f'generator grad shape: {generator_grad[0].shape}')
             #print(f'discriminator grad shape: {discriminator_grad.shape}')
