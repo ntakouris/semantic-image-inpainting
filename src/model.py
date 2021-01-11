@@ -174,7 +174,7 @@ class ModelInpaint():
             self.inpaint_loss = self.context_loss + self.l * self.perceptual_loss
 
             # self.discriminator_grad = tf.gradients(tf.reduce_sum(self.inpaint_loss), self.do)
-            self.generator_grad = tf.hessians(self.go, self.gi)
+            self.generator_grad = tf.hessians(self.inpaint_loss, self.go)
             self.inpaint_grad = tf.gradients(tf.reduce_sum(self.inpaint_loss), self.gi)
 
 
